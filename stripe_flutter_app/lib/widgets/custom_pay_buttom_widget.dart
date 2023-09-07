@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:stripe_flutter_app/helpers/alerts.dart';
+
+import '../blocs/pay_bloc_folder/pay_bloc.dart';
 
 class CustomPayButtomWidget extends StatelessWidget {
-  const CustomPayButtomWidget({Key? key}) : super(key: key);
+  final PayState state;
+  const CustomPayButtomWidget({
+    Key? key,
+    required this.state,
+  }) : super(key: key);
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
@@ -55,7 +62,7 @@ class CustomPayButtomWidget extends StatelessWidget {
               const SizedBox(
                 width: 20,
               ),
-              const _PayButtonWidget(),
+              _PayButtonWidget(state: state),
             ],
           ),
         ),
@@ -65,7 +72,8 @@ class CustomPayButtomWidget extends StatelessWidget {
 }
 
 class _PayButtonWidget extends StatelessWidget {
-  const _PayButtonWidget();
+  final PayState state;
+  const _PayButtonWidget({required this.state});
 
   @override
   Widget build(BuildContext context) {
@@ -76,35 +84,54 @@ class _PayButtonWidget extends StatelessWidget {
         elevation: 2,
         color: Colors.black,
         shape: const StadiumBorder(),
-        onPressed: () {},
+        onPressed: () async {
+          showLoading(context);
+          await Future.delayed(const Duration(seconds: 2));
+          // ignore: use_build_context_synchronously
+          Navigator.pop(context);
+        },
         child: const Icon(
           FontAwesomeIcons.googlePay,
           color: Colors.white,
-          size: 20,
+          size: 34,
         ),
       );
-    } else if ((Theme.of(context).platform == TargetPlatform.iOS)) {
+    } else if ((Theme.of(context).platform ==
+            TargetPlatform.iOS || //* Change || to && . || only for testing
+        !state.isActive)) {
       return MaterialButton(
         height: 45,
         minWidth: 150,
         elevation: 2,
         color: Colors.black,
         shape: const StadiumBorder(),
-        onPressed: () {},
+        onPressed: () async {
+          showLoading(context);
+          await Future.delayed(const Duration(seconds: 2));
+          // ignore: use_build_context_synchronously
+          Navigator.pop(context);
+        },
         child: const Icon(
           FontAwesomeIcons.applePay,
           color: Colors.white,
-          size: 20,
+          size: 34,
         ),
       );
-    } else if ((Theme.of(context).platform == TargetPlatform.windows)) {
+    } else if ((Theme.of(context).platform == TargetPlatform.windows &&
+        state.isActive)) {
       return MaterialButton(
         height: 45,
         minWidth: 150,
         elevation: 2,
         color: Colors.black,
         shape: const StadiumBorder(),
-        onPressed: () {},
+        onPressed: () async {
+          //showLoading(context);
+          showError(context, title: 'Pago', message: 'Invalid');
+          await Future.delayed(const Duration(seconds: 2));
+          // ignore: use_build_context_synchronously
+          Navigator.pop(context);
+        },
         child: const SizedBox(
           width: 100,
           child: Row(
@@ -121,7 +148,7 @@ class _PayButtonWidget extends StatelessWidget {
               Icon(
                 FontAwesomeIcons.solidCreditCard,
                 color: Colors.white,
-                size: 20,
+                size: 18,
               ),
             ],
           ),
@@ -134,7 +161,12 @@ class _PayButtonWidget extends StatelessWidget {
         elevation: 2,
         color: Colors.black,
         shape: const StadiumBorder(),
-        onPressed: () {},
+        onPressed: () async {
+          showLoading(context);
+          await Future.delayed(const Duration(seconds: 2));
+          // ignore: use_build_context_synchronously
+          Navigator.pop(context);
+        },
         child: const SizedBox(
           width: 100,
           child: Row(

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 
+import 'package:flutter_bloc/flutter_bloc.dart';
+
 import 'package:flutter_credit_card/credit_card_widget.dart';
 import 'package:flutter_credit_card/glassmorphism_config.dart';
+import 'package:stripe_flutter_app/blocs/pay_bloc_folder/pay_bloc.dart';
 
 import 'package:stripe_flutter_app/data/cards.dart';
 import 'package:stripe_flutter_app/helpers/helpers.dart';
@@ -68,46 +71,58 @@ class HomePage extends StatelessWidget {
                   fit: BoxFit.contain,
                   child: InkWell(
                     mouseCursor: MaterialStateMouseCursor.clickable,
-                    onTap: () => Navigator.push(
-                        context, navigatorFadeIn(context, const CardPage())),
-                    child: CreditCardWidget(
-                      width: 450,
-                      height: 230,
-                      cardNumber: card.cardNumber,
-                      expiryDate: card.expiracyDate,
-                      bankName: card.brand,
-                      cardHolderName: card.cardHolderName,
-                      cvvCode: card.cvv,
-                      isChipVisible: true,
-                      showBackView: false,
-                      obscureCardNumber: false,
-                      obscureInitialCardNumber: false,
-                      obscureCardCvv: false,
-                      isHolderNameVisible: true,
-                      glassmorphismConfig: Glassmorphism(
-                        blurX: 10.0,
-                        blurY: 10.0,
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: <Color>[
-                            const Color.fromARGB(255, 3, 3, 3).withAlpha(150),
-                            const Color.fromARGB(255, 253, 253, 253)
-                                .withAlpha(20),
-                          ],
-                          stops: const <double>[
-                            0.6,
-                            0.9,
-                          ],
+                    onTap: () {
+                      context.read<PayBloc>().add(OnSelectCard(card: card));
+                      Navigator.push(
+                          context, navigatorFadeIn(context, CardPage()));
+                    },
+                    child: Hero(
+                      transitionOnUserGestures:
+                          EditableText.debugDeterministicCursor,
+                      tag: card.cardNumber,
+                      child: CreditCardWidget(
+                        width: 450,
+                        height: 230,
+                        cardNumber: card.cardNumber,
+                        expiryDate: card.expiracyDate,
+                        bankName: card.brand,
+                        cardHolderName: card.cardHolderName,
+                        cvvCode: card.cvv,
+                        isChipVisible: true,
+                        showBackView: false,
+                        obscureCardNumber: false,
+                        obscureInitialCardNumber: false,
+                        obscureCardCvv: false,
+                        isHolderNameVisible: true,
+                        onCreditCardWidgetChange: (p0) {},
+                        glassmorphismConfig: Glassmorphism(
+                          blurX: 10.0,
+                          blurY: 10.0,
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: <Color>[
+                              const Color.fromARGB(255, 3, 3, 3).withAlpha(150),
+                              const Color.fromARGB(255, 253, 253, 253)
+                                  .withAlpha(20),
+                            ],
+                            stops: const <double>[
+                              0.6,
+                              0.9,
+                            ],
+                          ),
                         ),
                       ),
-                      onCreditCardWidgetChange: (p0) {},
                     ),
                   ),
                 );
               }),
         ),
-        const CustomPayButtomWidget(),
+        BlocBuilder<PayBloc, PayState>(
+          builder: (context, state) {
+            return CustomPayButtomWidget(state: state);
+          },
+        ),
       ]),
     );
   }
