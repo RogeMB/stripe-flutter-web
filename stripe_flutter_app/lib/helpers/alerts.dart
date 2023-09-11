@@ -19,7 +19,7 @@ showLoading(BuildContext context) {
   );
 }
 
-showError(
+showCustomDialog(
   BuildContext context, {
   required String title,
   required String message,

@@ -3,11 +3,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'package:stripe_flutter_app/blocs/pay_bloc_folder/pay_bloc.dart';
+import 'package:stripe_flutter_app/services/stripe_service.dart';
 import 'pages/pages.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
+
+  // ignore: unused_local_variable
+  final StripeService stripeService = StripeService()..init();
 
   runApp(const MainApp());
 }

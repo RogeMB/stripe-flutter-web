@@ -108,8 +108,11 @@ class _PayButtonWidget extends StatelessWidget {
         onPressed: () async {
           showLoading(context);
           await Future.delayed(const Duration(seconds: 2));
-          // ignore: use_build_context_synchronously
-          Navigator.pop(context);
+          if (context.mounted) {
+            Navigator.pop(context);
+          } else {
+            return;
+          }
         },
         child: const Icon(
           FontAwesomeIcons.applePay,
@@ -127,7 +130,7 @@ class _PayButtonWidget extends StatelessWidget {
         shape: const StadiumBorder(),
         onPressed: () async {
           //showLoading(context);
-          showError(context, title: 'Pago', message: 'Invalid');
+          showCustomDialog(context, title: 'Pago', message: 'Invalid');
           await Future.delayed(const Duration(seconds: 2));
           // ignore: use_build_context_synchronously
           Navigator.pop(context);
