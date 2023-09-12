@@ -13,7 +13,6 @@ import 'package:stripe_flutter_app/helpers/helpers.dart';
 import 'package:stripe_flutter_app/models/custom_credit_card.dart';
 import 'package:stripe_flutter_app/pages/card_form_page.dart';
 import 'package:stripe_flutter_app/pages/card_page.dart';
-import 'package:stripe_flutter_app/pages/order_page.dart';
 import 'package:stripe_flutter_app/services/stripe_service.dart';
 import 'package:stripe_flutter_app/widgets/widgets.dart';
 
@@ -60,7 +59,12 @@ class HomePage extends StatelessWidget {
           // },
           onPressed: () {
             Navigator.push(
-                context, navigatorFadeIn(context, const CardFormPage()));
+              context,
+              navigatorFadeIn(
+                context,
+                const CardFormPage(),
+              ),
+            );
           },
           child: const Icon(
             FontAwesomeIcons.plus,

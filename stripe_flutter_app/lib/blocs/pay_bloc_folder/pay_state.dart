@@ -15,7 +15,7 @@ class PayState {
     required this.creditCard,
   });
 
-  String get getAmountString => amount.toStringAsFixed(2);
+  String get getAmountString => ((amount * 100).floor()).toString();
 
   PayState copyWith({
     double? amount,
