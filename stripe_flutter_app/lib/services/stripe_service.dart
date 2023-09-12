@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:dio/dio.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 
@@ -12,9 +10,12 @@ class StripeService {
   StripeService._privateConstructor();
   static final StripeService _instance = StripeService._privateConstructor();
   factory StripeService() {
-    final paymentApiUrl = Environment.paymentUrl;
-    final secretKey = Environment.stripeSecretKey;
-    final publishableKey = Environment.stripePublishabledKey;
+    // ignore: unused_local_variable, no_leading_underscores_for_local_identifiers
+    final _paymentApiUrl = Environment.paymentUrl;
+    // ignore: unused_local_variable, no_leading_underscores_for_local_identifiers
+    final _secretKey = Environment.stripeSecretKey;
+    // ignore: unused_local_variable, no_leading_underscores_for_local_identifiers
+    final _publishableKey = Environment.stripePublishabledKey;
 
     return _instance;
   }
@@ -56,30 +57,21 @@ class StripeService {
     required String currency,
   }) async {
     try {
+      //* Payment method creation */
       final paymentMethod = await Stripe.instance.createPaymentMethod(
         params: const PaymentMethodParams.card(
           paymentMethodData: PaymentMethodData(),
         ),
       );
 
-      // final paymentMethod = await Stripe.instance.confirmPayment(
-      //   paymentIntentClientSecret: _secretKey,
-      //   data: const PaymentMethodParams.card(
-      //     paymentMethodData: PaymentMethodData(
-      //       billingDetails: BillingDetails(),
-      //     ),
-      //   ),
-      // );
-
-      final response = await _createPaymentIntent(
+      final StripeCustomResponse finalResponse = await _confirmThePayment(
         amount: amount,
         currency: currency,
+        paymentMethod: paymentMethod,
       );
 
-      //TODO realizar cobro
-
-      return const StripeCustomResponse(
-          isSuccessful: true, message: "All was successful!");
+      return finalResponse;
+      //
     } catch (e) {
       return StripeCustomResponse(
         isSuccessful: false,
@@ -107,6 +99,7 @@ class StripeService {
         ),
       );
       return PaymentIntentResponse.fromJson(response.data);
+      //
     } catch (e) {
       return PaymentIntentResponse(
         status: "400",
@@ -114,9 +107,47 @@ class StripeService {
     }
   }
 
-  Future<void> _confirmThePayment({
+  Future<StripeCustomResponse> _confirmThePayment({
     required String amount,
     required String currency,
     required PaymentMethod paymentMethod,
-  }) async {}
+  }) async {
+    try {
+      //* Payment intent creation */
+      final paymentIntentResponse = await _createPaymentIntent(
+        amount: amount,
+        currency: currency,
+      );
+      //* Confirm payment */
+      final paymentResult = await Stripe.instance.confirmPayment(
+        paymentIntentClientSecret:
+            paymentIntentResponse.clientSecret.toString(),
+        data: const PaymentMethodParams.card(
+          paymentMethodData: PaymentMethodData(
+            billingDetails: BillingDetails(),
+          ),
+        ),
+        // data: const PaymentMethodParams.card(
+        //   paymentMethodData: PaymentMethodData(
+        //     billingDetails: BillingDetails(),
+        //   ),
+        // ),
+      );
+      if (paymentResult.status.toString().toLowerCase() == "succeeded") {
+        return const StripeCustomResponse(
+            isSuccessful: true, message: "Payment completed successfully!");
+      } else {
+        return StripeCustomResponse(
+          isSuccessful: true,
+          message: "Failed: ${paymentResult.status}",
+        );
+      }
+    } catch (e) {
+      print(e.toString());
+      return StripeCustomResponse(
+        isSuccessful: false,
+        message: e.toString(),
+      );
+    }
+  }
 }

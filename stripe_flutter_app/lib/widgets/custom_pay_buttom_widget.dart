@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:stripe_flutter_app/helpers/alerts.dart';
 
-import '../blocs/pay_bloc_folder/pay_bloc.dart';
+import '../blocs/pay_bloc/pay_bloc.dart';
 
 class CustomPayButtomWidget extends StatelessWidget {
   final PayState state;

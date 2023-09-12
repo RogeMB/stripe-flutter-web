@@ -5,7 +5,7 @@ import 'package:flutter_credit_card/glassmorphism_config.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:stripe_flutter_app/models/custom_credit_card.dart';
 
-import '../blocs/pay_bloc_folder/pay_bloc.dart';
+import '../blocs/pay_bloc/pay_bloc.dart';
 
 import '../widgets/custom_pay_buttom_widget.dart';
 

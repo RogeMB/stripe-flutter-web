@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:stripe_flutter_app/services/stripe_service.dart';
 
-import '../blocs/pay_bloc_folder/pay_bloc.dart';
+import '../blocs/pay_bloc/pay_bloc.dart';
 import '../helpers/alerts.dart';
 
 class CardFormPage extends StatelessWidget {
@@ -14,13 +14,13 @@ class CardFormPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // ignore: no_leading_underscores_for_local_identifiers
     CardFieldInputDetails? _card;
     final StripeService stripeService = StripeService();
 
     final currentContext = context;
     //final payBloc = BlocProvider.of<PayBloc>(context);
     final payBloc = context.watch<PayBloc>();
-    final size = MediaQuery.of(context).size;
 
     return Scaffold(
       appBar: AppBar(
@@ -63,6 +63,9 @@ class CardFormPage extends StatelessWidget {
                         borderSide: BorderSide(width: 2),
                       ),
                     ),
+                    onFocus: (focusDetails) {
+                      FocusScope.of(context).requestFocus(FocusNode());
+                    },
                     onCardChanged: (card) {
                       _card = card;
                     },
@@ -71,38 +74,43 @@ class CardFormPage extends StatelessWidget {
                 const SizedBox(
                   height: 25,
                 ),
-                //if (_card?.complete ??
-                //     false) //! Check why sometimes works and sometimes doesn't
-                ElevatedButton(
-                  onPressed: () async {
-                    final String amount = payBloc.state.getAmountString;
-                    final String currency = payBloc.state.currency;
+                //! Check why sometimes works and sometimes doesn't
+                if (_card?.complete ?? true)
+                  ElevatedButton(
+                    onPressed: () async {
+                      // showLoading(context);
+                      final String amount = payBloc.state.getAmountString;
+                      final String currency = payBloc.state.currency;
 
-                    if (!context.mounted) return;
-                    if (context.mounted) {
-                      final response = await stripeService.payWithNewCard(
-                        amount: amount,
-                        currency: currency,
-                      );
-
-                      if (response.isSuccessful && context.mounted) {
-                        return showCustomDialog(currentContext,
-                            title: 'Card loaded!',
-                            message: 'Everything is correct!');
-                      } else if (!response.isSuccessful && context.mounted) {
-                        return showCustomDialog(
-                          currentContext,
-                          title: 'Something went wrong!',
-                          message: response.message
-                              .split(',')[3]
-                              .trim()
-                              .toUpperCase(),
+                      if (!context.mounted) return;
+                      if (context.mounted) {
+                        final response = await stripeService.payWithNewCard(
+                          amount: amount,
+                          currency: currency,
                         );
+
+                        if (response.isSuccessful && context.mounted) {
+                          // Navigator.pop(context);
+                          return showCustomDialog(
+                            currentContext,
+                            title: 'Congratulations!',
+                            message: response.message,
+                          );
+                        } else if (!response.isSuccessful && context.mounted) {
+                          // Navigator.pop(context);
+                          return showCustomDialog(
+                            currentContext,
+                            title: 'Something went wrong!',
+                            message: response.message
+                                .split(',')[3]
+                                .trim()
+                                .toUpperCase(),
+                          );
+                        }
                       }
-                    }
-                  },
-                  child: const Text('Accept'),
-                ),
+                    },
+                    child: const Text('Accept'),
+                  ),
               ],
             ),
           ),
