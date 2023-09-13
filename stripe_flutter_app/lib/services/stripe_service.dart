@@ -64,7 +64,7 @@ class StripeService {
         ),
       );
 
-      final StripeCustomResponse finalResponse = await _confirmThePayment(
+      final StripeCustomResponse finalResponse = await _confirmPayment(
         amount: amount,
         currency: currency,
         paymentMethod: paymentMethod,
@@ -107,12 +107,18 @@ class StripeService {
     }
   }
 
-  Future<StripeCustomResponse> _confirmThePayment({
+  Future<StripeCustomResponse> _confirmPayment({
     required String amount,
     required String currency,
     required PaymentMethod paymentMethod,
   }) async {
     try {
+      final PaymentMethodParams paymentMethodParams =
+          PaymentMethodParams.cardFromMethodId(
+        paymentMethodData:
+            PaymentMethodDataCardFromMethod(paymentMethodId: paymentMethod.id),
+      );
+
       //* Payment intent creation */
       final paymentIntentResponse = await _createPaymentIntent(
         amount: amount,
@@ -122,28 +128,19 @@ class StripeService {
       final paymentResult = await Stripe.instance.confirmPayment(
         paymentIntentClientSecret:
             paymentIntentResponse.clientSecret.toString(),
-        data: const PaymentMethodParams.card(
-          paymentMethodData: PaymentMethodData(
-            billingDetails: BillingDetails(),
-          ),
-        ),
-        // data: const PaymentMethodParams.card(
-        //   paymentMethodData: PaymentMethodData(
-        //     billingDetails: BillingDetails(),
-        //   ),
-        // ),
+        data: paymentMethodParams,
       );
-      if (paymentResult.status.toString().toLowerCase() == "succeeded") {
+
+      if (paymentResult.status.name.toLowerCase() == "succeeded") {
         return const StripeCustomResponse(
             isSuccessful: true, message: "Payment completed successfully!");
       } else {
         return StripeCustomResponse(
           isSuccessful: true,
-          message: "Failed: ${paymentResult.status}",
+          message: "Failed: ${paymentResult.status.name.toLowerCase()}",
         );
       }
     } catch (e) {
-      print(e.toString());
       return StripeCustomResponse(
         isSuccessful: false,
         message: e.toString(),
