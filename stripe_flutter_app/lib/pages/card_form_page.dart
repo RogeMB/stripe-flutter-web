@@ -17,7 +17,6 @@ class CardFormPage extends StatelessWidget {
     // ignore: no_leading_underscores_for_local_identifiers
     CardFieldInputDetails? _card;
     final StripeService stripeService = StripeService();
-
     final currentContext = context;
     //final payBloc = BlocProvider.of<PayBloc>(context);
     final payBloc = context.watch<PayBloc>();
@@ -63,11 +62,14 @@ class CardFormPage extends StatelessWidget {
                         borderSide: BorderSide(width: 2),
                       ),
                     ),
-                    onFocus: (focusDetails) {
-                      FocusScope.of(context).requestFocus(FocusNode());
-                    },
                     onCardChanged: (card) {
                       _card = card;
+                      print(card!.complete);
+                      if (card.complete) {
+                        payBloc.emit(payBloc.state.copyWith(isCompleted: true));
+                      }
+                      payBloc.state.copyWith(isCompleted: true);
+                      print(payBloc.state.isCompleted);
                     },
                   ),
                 ),
@@ -75,10 +77,11 @@ class CardFormPage extends StatelessWidget {
                   height: 25,
                 ),
                 //! Check why sometimes works and sometimes doesn't
-                if (_card?.complete ?? true)
+                //  if (_card?.complete ?? true)
+                if (payBloc.state.isCompleted)
                   ElevatedButton(
                     onPressed: () async {
-                      // showLoading(context);
+                      showLoading(context);
                       final String amount = payBloc.state.getAmountString;
                       final String currency = payBloc.state.currency;
 
@@ -90,14 +93,14 @@ class CardFormPage extends StatelessWidget {
                         );
 
                         if (response.isSuccessful && context.mounted) {
-                          // Navigator.pop(context);
+                          Navigator.pop(context);
                           return showCustomDialog(
                             currentContext,
                             title: 'Congratulations!',
                             message: response.message,
                           );
                         } else if (!response.isSuccessful && context.mounted) {
-                          // Navigator.pop(context);
+                          Navigator.pop(context);
                           return showCustomDialog(
                             currentContext,
                             title: 'Something went wrong!',

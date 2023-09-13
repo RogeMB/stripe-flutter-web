@@ -40,17 +40,43 @@ class StripeService {
     Stripe.merchantIdentifier = "test";
   }
 
-  Future payWithExistingCard({
+  Future<StripeCustomResponse> payWithExistingCard({
     required String amount,
     required String currency,
-    required PaymentMethodType card,
+    required CardDetails card,
     // CardField card,
-  }) async {}
+  }) async {
+    try {
+      //* THIS IS INCORRECT. We have to take the CardDetails of the card parameter somehow and
+      //* create a PaymentMethod with them but I haven't resolved this yet. */
+      final paymentMethod = await Stripe.instance.createPaymentMethod(
+        params: const PaymentMethodParams.card(
+          paymentMethodData: PaymentMethodData(),
+        ),
+      );
+
+      final StripeCustomResponse finalResponse = await _confirmPayment(
+        amount: amount,
+        currency: currency,
+        paymentMethod: paymentMethod,
+      );
+
+      return finalResponse;
+      //
+    } catch (e) {
+      return StripeCustomResponse(
+        isSuccessful: false,
+        message: e.toString(),
+      );
+    }
+  }
 
   Future<void> payWithApplePayOrGooglePay({
     required String amount,
     required String currency,
-  }) async {}
+  }) async {
+    //! INCOMPLETE
+  }
 
   Future<StripeCustomResponse> payWithNewCard({
     required String amount,

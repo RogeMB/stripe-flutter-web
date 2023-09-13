@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
+
+import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:flutter_stripe_web/flutter_stripe_web.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+
 import 'package:stripe_flutter_app/helpers/alerts.dart';
+import 'package:stripe_flutter_app/models/custom_credit_card.dart';
+import 'package:stripe_flutter_app/models/stripe_custom_response.dart';
+import 'package:stripe_flutter_app/services/stripe_service.dart';
 
 import '../blocs/pay_bloc/pay_bloc.dart';
 
@@ -36,8 +43,8 @@ class CustomPayButtomWidget extends StatelessWidget {
               FittedBox(
                 alignment: Alignment.topLeft,
                 child: RichText(
-                  text: const TextSpan(children: <TextSpan>[
-                    TextSpan(
+                  text: TextSpan(children: <TextSpan>[
+                    const TextSpan(
                       text: 'Total',
                       style: TextStyle(
                         color: Colors.black87,
@@ -45,12 +52,12 @@ class CustomPayButtomWidget extends StatelessWidget {
                         fontSize: 24,
                       ),
                     ),
-                    TextSpan(
+                    const TextSpan(
                       text: '\n\n',
                     ),
                     TextSpan(
-                      text: '250€',
-                      style: TextStyle(
+                      text: '${state.amount} ${state.currency}',
+                      style: const TextStyle(
                         color: Colors.black87,
                         fontWeight: FontWeight.normal,
                         fontSize: 36,
@@ -73,10 +80,15 @@ class CustomPayButtomWidget extends StatelessWidget {
 
 class _PayButtonWidget extends StatelessWidget {
   final PayState state;
+
   const _PayButtonWidget({required this.state});
 
   @override
   Widget build(BuildContext context) {
+    final currentContext = context;
+    final CustomCreditCard? selectedCard = state.creditCard;
+    final StripeService stripeService = StripeService();
+
     if (Theme.of(context).platform == TargetPlatform.android) {
       return MaterialButton(
         height: 45,
@@ -122,6 +134,7 @@ class _PayButtonWidget extends StatelessWidget {
       );
     } else if ((Theme.of(context).platform == TargetPlatform.windows &&
         state.isActive)) {
+      final expiracyDate = selectedCard!.expiracyDate.split('/');
       return MaterialButton(
         height: 45,
         minWidth: 150,
@@ -129,11 +142,39 @@ class _PayButtonWidget extends StatelessWidget {
         color: Colors.black,
         shape: const StadiumBorder(),
         onPressed: () async {
-          //showLoading(context);
-          showCustomDialog(context, title: 'Pago', message: 'Invalid');
-          await Future.delayed(const Duration(seconds: 2));
-          // ignore: use_build_context_synchronously
-          Navigator.pop(context);
+          //! THIS IS NOT COMPLETED --> CHECK OUT STRIPESERVICE.PAYWITHEXISTINGCARD
+          showLoading(context);
+          if (!context.mounted) return;
+          if (context.mounted) {
+            final StripeCustomResponse response =
+                await stripeService.payWithExistingCard(
+              amount: state.getAmountString,
+              currency: state.currency,
+              card: CardDetails(
+                cvc: selectedCard.cvv,
+                expirationMonth: expiracyDate.first as int,
+                expirationYear: expiracyDate.last as int,
+                number: selectedCard.cardNumber,
+              ),
+            );
+            if (response.isSuccessful && context.mounted) {
+              Navigator.pop(context);
+              return showCustomDialog(
+                currentContext,
+                title: 'Congratulations!',
+                message: response.message,
+              );
+            } else if (!response.isSuccessful && context.mounted) {
+              Navigator.pop(context);
+              return showCustomDialog(
+                currentContext,
+                title: 'Something went wrong!',
+                message: response.message.split(',')[3].trim().toUpperCase(),
+              );
+            }
+          } else {
+            return;
+          }
         },
         child: const SizedBox(
           width: 100,
