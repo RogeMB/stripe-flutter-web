@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:stripe_flutter_app/blocs/completed_cubit/completed_cubit.dart';
 
 import 'package:stripe_flutter_app/blocs/pay_bloc/pay_bloc.dart';
 import 'package:stripe_flutter_app/services/stripe_service.dart';
@@ -25,6 +26,9 @@ class MainApp extends StatelessWidget {
       providers: [
         BlocProvider(
           create: (_) => PayBloc(),
+        ),
+        BlocProvider(
+          create: (_) => CompletedCubit(),
         ),
       ],
       child: MaterialApp(

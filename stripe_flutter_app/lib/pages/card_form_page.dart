@@ -2,16 +2,23 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:stripe_flutter_app/services/stripe_service.dart';
 
+import '../blocs/completed_cubit/completed_cubit.dart';
 import '../blocs/pay_bloc/pay_bloc.dart';
 import '../helpers/alerts.dart';
 
-class CardFormPage extends StatelessWidget {
+class CardFormPage extends StatefulWidget {
   const CardFormPage({
     super.key,
   });
 
+  @override
+  State<CardFormPage> createState() => _CardFormPageState();
+}
+
+class _CardFormPageState extends State<CardFormPage> {
   @override
   Widget build(BuildContext context) {
     // ignore: no_leading_underscores_for_local_identifiers
@@ -20,10 +27,19 @@ class CardFormPage extends StatelessWidget {
     final currentContext = context;
     //final payBloc = BlocProvider.of<PayBloc>(context);
     final payBloc = context.watch<PayBloc>();
+    final completedCubit = context.watch<CompletedCubit>();
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('CardForm'),
+        leading: IconButton(
+          icon: const Icon(FontAwesomeIcons.arrowLeft),
+          onPressed: () {
+            Navigator.of(context).pop();
+            context.read<PayBloc>().add(OnUnSelectCard());
+            completedCubit.toggleToFalse();
+          },
+        ),
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -63,22 +79,21 @@ class CardFormPage extends StatelessWidget {
                       ),
                     ),
                     onCardChanged: (card) {
-                      _card = card;
-                      print(card!.complete);
-                      if (card.complete) {
-                        payBloc.emit(payBloc.state.copyWith(isCompleted: true));
-                      }
-                      payBloc.state.copyWith(isCompleted: true);
-                      print(payBloc.state.isCompleted);
+                      setState(() {
+                        _card = card;
+                        if (card!.complete) {
+                          completedCubit.toggleCompleted();
+                        } else {
+                          completedCubit.toggleToFalse();
+                        }
+                      });
                     },
                   ),
                 ),
                 const SizedBox(
                   height: 25,
                 ),
-                //! Check why sometimes works and sometimes doesn't
-                //  if (_card?.complete ?? true)
-                if (payBloc.state.isCompleted)
+                if (completedCubit.state.isCompleted)
                   ElevatedButton(
                     onPressed: () async {
                       showLoading(context);
